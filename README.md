@@ -9,9 +9,7 @@
 ---
 
 
-<p align="center">
-  <video src="assets/demo.mp4" width="70%" controls></video>
-</p>
+https://github.com/user-attachments/assets/5d51d49a-f4bc-4e65-af42-ccf144d35839
 
 ---
 
