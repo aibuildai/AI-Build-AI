@@ -9,7 +9,9 @@
 ---
 
 
-https://github.com/aibuildai/AI-Build-AI/raw/main/assets/demo.mp4
+<p align="center">
+  <video src="assets/demo.mp4" width="70%" controls></video>
+</p>
 
 ---
 
