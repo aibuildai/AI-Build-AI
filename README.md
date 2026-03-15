@@ -9,7 +9,7 @@
 ---
 
 
-[![Demo](assets/demo-thumbnail.png)](https://github.com/aibuildai/AI-Build-AI/releases/download/media/demo.mp4)
+https://github.com/aibuildai/AI-Build-AI/raw/main/assets/demo.mp4
 
 ---
 
@@ -17,7 +17,9 @@
 
 AIBuildAI decomposes the entire ML pipeline into specialized roles — setup, management, design, coding, tuning, and aggregation — each handled by a dedicated AI agent built on top of Claude models.
 
-![AIBuildAI Architecture](assets/workflow.png)
+<p align="center">
+  <img src="assets/workflow.png" width="70%" alt="AIBuildAI Architecture">
+</p>
 
 ---
 
