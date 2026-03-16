@@ -58,6 +58,7 @@ export ANTHROPIC_API_KEY=your-api-key
 **Example task:** Predict the enzyme class of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)).
 
 ```bash
+git clone https://github.com/aibuildai/AI-Build-AI.git && cd AI-Build-AI
 aibuildai --task-name protein-ec-prediction \
   --data-dir data/protein-ec-prediction \
   --playground-dir /path/to/playground \
@@ -139,7 +140,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ```bibtex
 @misc{zhang2026aibuildai,
-  title={AIBuildAI: An AI Agent that Automatically Builds AI Models},
+  title={AIBuildAI: An AI agent that automatically builds AI models},
   author={Ruiyi Zhang and Peijia Qin and Qi Cao and Li Zhang and Pengtao Xie},
   year={2026}
 }
