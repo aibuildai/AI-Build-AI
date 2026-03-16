@@ -16,7 +16,7 @@ https://github.com/user-attachments/assets/b6043d39-43df-464a-8e25-d24006ba99c8
 
 ## Introduction
 
-AIBuildAI is an AI agent that automatically builds AI models. Given a task, it runs an agent loop that analyzes the problem, designs a model, writes the code to implement it, trains the model, performs hyperparameter tuning, evaluates model performance, and iteratively refines the solution. By automating the model development workflow, AIBuildAI reduces much of the manual effort required to build AI models.
+AIBuildAI is an AI agent that automatically builds AI models. Given a task, it runs an agent loop that analyzes the problem, designs models, writes code to implement them, trains them, tunes hyperparameters, evaluates model performance, and iteratively improves the models. By automating the model development workflow, AIBuildAI reduces much of the manual effort required to build AI models.
 
 <p align="center">
   <img src="assets/workflow.png" width="70%" alt="AIBuildAI Architecture">
