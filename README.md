@@ -47,57 +47,39 @@ cd aibuildai-linux-x86_64-v0.1.0
 ./install.sh
 ```
 
----
-
-### Usage (Recommended)
-
-The recommended way to run AIBuildAI is via the command line.
-
-First, set your Anthropic API key:
+### Set up credentials
 
 ```bash
 export ANTHROPIC_API_KEY=your-api-key
 ```
 
-Next, we show an example of using AIBuildAI to build an AI model that classifies whether an aerial image contains a columnar cactus.
+### Run
 
-#### Data Setup
-
-Run the provided script to download and prepare the dataset. You will need a [Kaggle Legacy API Key](https://www.kaggle.com/settings) and must accept the [competition rules](https://www.kaggle.com/competitions/aerial-cactus-identification/rules) beforehand. To get your legacy key, go to Kaggle Settings → API → Legacy API Credentials.
+**Example task:** Predict the enzyme class of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)).
 
 ```bash
-pip install kaggle==1.6.14
-python scripts/download_aerial_cactus.py \
-  --kaggle-username your_username \
-  --kaggle-key your_api_key \
-  --data-dir /path/to/data/aerial-cactus-identification
-```
-
-#### Running
-
-AIBuildAI takes two key inputs: `--data-dir`, the path to the training data for the task, and `--instruction`, a natural-language description of the AI task to solve.
-
-Example command:
-
-```bash
-aibuildai --task-name aerial-cactus-identification \
-  --data-dir /path/to/data/aerial-cactus-identification \
+aibuildai --task-name protein-ec-prediction \
+  --data-dir data/protein-ec-prediction \
   --playground-dir /path/to/playground \
   --model claude-opus-4-6 \
   --max-agent-calls 8 \
-  --run-budget-minutes 10 \
+  --run-budget-minutes 60 \
   --num-candidates 3 \
-  --instruction "$(cat tasks/aerial-cactus-identification.md)" \
+  --instruction "$(cat tasks/protein-ec-prediction.md)" \
+  --pipeline-budget-minutes 90 \
   --no-form
 ```
 
+AIBuildAI takes two key inputs: `--data-dir`, the path to the training data for the task, and `--instruction`, a natural-language description of the AI task to solve.
+
+
 **Important:**
 
-Run the command directly in your terminal.
+Run the command directly in your terminal. Do not wrap the command in a `.sh` or `.bash` script. Running it through a script may cause the TUI (Text User Interface) to crash.
 
-Do not wrap the command in a `.sh` or `.bash` script. Running it through a script may cause the TUI (Text User Interface) to crash.
+### Results
 
-#### Output
+#### Output directory
 
 After a run completes, the output directory usually looks like (structure may slightly vary by task):
 
@@ -105,23 +87,29 @@ After a run completes, the output directory usually looks like (structure may sl
 ├── candidate_1/  candidate_2/  candidate_3/  # Auto-generated training scripts and model checkpoints
 ├── checkpoint.pth       # Best model checkpoint
 ├── inference.py         # Standalone inference script for the final model
+├── submission.csv       # Test predictions (if test inputs are provided)
 └── progress.pdf         # Visual progress report
 ```
 
-Use `inference.py` to run predictions with the final model.
+The main outputs of an AIBuildAI run are the model checkpoints and the script `inference.py`, which runs predictions with the final model on any data.
 
-#### Other Tasks
+#### Evaluation
 
-We provide additional task markdowns you can use in the same way — download the corresponding dataset, prepare the data directory, and pass the markdown as `--instruction`:
+In the example protein-ec-prediction task, we provide unlabeled test data in the data folder, so AIBuildAI also generates a predicted-label file `submission.csv`. To evaluate the predictions against ground-truth labels:
 
-- `tasks/learning-agency-lab-automated-essay-scoring-2.md`
-- `tasks/spaceship-titanic.md`
+```bash
+python scripts/eval_protein_ec.py \
+  --labels data/labels/protein-ec-prediction.csv \
+  --submission /path/to/playground/code/protein-ec-prediction/timestamp/submission.csv
+```
 
-You can also write your own markdown to describe your own AI task in a similar format and let AIBuildAI automatically build a model for it.
+### Other tasks
+
+We provide additional task markdowns in the `tasks/` folder. You can also write your own task markdown and point `--data-dir` to your own dataset.
 
 ---
 
-#### Command Line Options
+### Command line options
 
 To see all available options, run:
 
@@ -129,7 +117,7 @@ To see all available options, run:
 aibuildai -h
 ```
 
-### Interactive Form Mode (Optional)
+### Interactive form mode 
 
 Alternatively, you can run AIBuildAI using the interactive form interface by running without `--no-form`:
 
@@ -149,12 +137,10 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Citation
 
-If you find AIBuildAI useful, please cite our paper:
-
 ```bibtex
-@article{zhang2026aibuildai,
+@misc{zhang2026aibuildai,
   title={AIBuildAI: An AI Agent that Automatically Builds AI Models},
-  author={Zhang, Ruiyi and Qin, Peijia and Cao, Qi and Zhang, Li and Xie, Pengtao},
+  author={Ruiyi Zhang and Peijia Qin and Qi Cao and Li Zhang and Pengtao Xie},
   year={2026}
 }
 ```
