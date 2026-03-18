@@ -1,6 +1,6 @@
 <h1 align="center"><small>AIBuildAI – An AI agent that automatically builds AI models</small></h1>
 
-<h1 align="center"><sub>🏆 #1 on OpenAI <a href="https://github.com/openai/mle-bench/pull/126">MLE-Bench</a></sub></h1>
+<h1 align="center"><sub>🏆 #1 on OpenAI <a href="https://github.com/openai/mle-bench">MLE-Bench</a></sub></h1>
 
 
 <p align="center">
@@ -26,7 +26,7 @@ AIBuildAI is an AI agent that automatically builds AI models. Given a task, it r
 
 ## Current Results
 
-On OpenAI [MLE-Bench](https://github.com/openai/mle-bench/pull/126), AIBuildAI ranked #1, demonstrating strong performance on real-world AI model building tasks.
+On OpenAI [MLE-Bench](https://github.com/openai/mle-bench), AIBuildAI ranked #1, demonstrating strong performance on real-world AI model building tasks.
 
 <p align="center">
   <img src="assets/results.png" width="50%" alt="MLE-Bench Results">
