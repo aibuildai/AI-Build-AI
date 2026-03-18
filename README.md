@@ -41,9 +41,9 @@ On OpenAI [MLE-Bench](https://github.com/openai/mle-bench), AIBuildAI ranked #1,
 AIBuildAI requires a **Linux x86_64** machine.
 
 ```bash
-curl -L -O https://github.com/aibuildai/AI-Build-AI/releases/latest/download/aibuildai-linux-x86_64-v0.1.0.tar.gz
-tar -xzf aibuildai-linux-x86_64-v0.1.0.tar.gz
-cd aibuildai-linux-x86_64-v0.1.0
+curl -L -O https://github.com/aibuildai/AI-Build-AI/releases/latest/download/aibuildai-linux-x86_64-v0.1.1.tar.gz
+tar -xzf aibuildai-linux-x86_64-v0.1.1.tar.gz
+cd aibuildai-linux-x86_64-v0.1.1
 ./install.sh
 ```
 
