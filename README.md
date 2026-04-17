@@ -2,9 +2,11 @@
 
 <h1 align="center"><sub>🏆 #1 on OpenAI <a href="https://github.com/openai/mle-bench">MLE-Bench</a></sub></h1>
 
-
 <p align="center">
   <img src="https://img.shields.io/github/downloads/aibuildai/AI-Build-AI/total?style=flat-square&label=downloads" alt="Downloads">
+  <a href="https://arxiv.org/abs/2604.14455">
+  <img alt="arXiv" src="https://img.shields.io/badge/arXiv-2604.14455-b31b1b.svg">
+  </a>
 </p>
 
 ---
@@ -139,10 +141,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Citation
 
 ```bibtex
-@misc{zhang2026aibuildai,
-  title={AIBuildAI: An AI agent that automatically builds AI models},
-  author={Ruiyi Zhang and Peijia Qin and Qi Cao and Li Zhang and Pengtao Xie},
-  year={2026}
+@article{zhang2026aibuildai,
+    title={AIBuildAI: An AI Agent for Automatically Building AI Models},
+    author={Ruiyi Zhang and Peijia Qin and Qi Cao and Li Zhang and Pengtao Xie},
+    year={2026},
+    journal={arXiv},
+    url={https://arxiv.org/abs/2604.14455}
 }
 ```
 
