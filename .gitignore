@@ -43,6 +43,7 @@ logs/
 *.pkl
 *.npy
 *.npz
+!tasks/**/checkpoint.pth
 
 # IDEs
 .vscode/
