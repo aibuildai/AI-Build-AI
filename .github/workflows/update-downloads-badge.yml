@@ -1,0 +1,42 @@
+name: Update downloads badge
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  release:
+    types: [published, edited, deleted]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute total downloads and write SVG
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TOTAL=$(curl -sfH "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" \
+            | jq '[.[].assets[].download_count] | add // 0')
+          echo "total downloads: $TOTAL"
+          mkdir -p assets
+          curl -sfL "https://img.shields.io/badge/downloads-${TOTAL}-brightgreen?style=flat-square" \
+            -o assets/downloads.svg
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/downloads.svg
+          if git diff --cached --quiet; then
+            echo "no change"
+          else
+            git commit -m "chore: refresh downloads badge"
+            git push
+          fi

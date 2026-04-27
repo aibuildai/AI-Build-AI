@@ -3,7 +3,7 @@
 <h1 align="center"><sub>🏆 #1 on OpenAI <a href="https://github.com/openai/mle-bench">MLE-Bench</a></sub></h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/downloads/aibuildai/AI-Build-AI/total?style=flat-square&label=downloads" alt="Downloads">
+  <img src="assets/downloads.svg" alt="Downloads">
   <a href="https://arxiv.org/abs/2604.14455">
   <img alt="arXiv" src="https://img.shields.io/badge/arXiv-2604.14455-b31b1b.svg">
   </a>
