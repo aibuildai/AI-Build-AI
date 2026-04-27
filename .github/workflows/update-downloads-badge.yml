@@ -37,7 +37,8 @@ jobs:
 
           PREV=0
           if [ -f assets/downloads.svg ]; then
-            PREV=$(grep -oE 'downloads: [0-9]+' assets/downloads.svg | grep -oE '[0-9]+' || echo 0)
+            PREV=$(grep -oE '<title>downloads: [0-9]+' assets/downloads.svg | grep -oE '[0-9]+$' | head -n1)
+            PREV=${PREV:-0}
           fi
           echo "previous SVG value: $PREV"
 
