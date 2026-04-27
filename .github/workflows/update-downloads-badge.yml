@@ -21,10 +21,31 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          TOTAL=$(curl -sfH "Authorization: Bearer $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" \
-            | jq '[.[].assets[].download_count] | add // 0')
+
+          JSON=""
+          for i in 1 2 3 4 5; do
+            JSON=$(curl -sfH "Authorization: Bearer $GITHUB_TOKEN" \
+              "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100")
+            COUNT=$(echo "$JSON" | jq 'length')
+            echo "attempt $i: releases length=$COUNT"
+            [ "$COUNT" -gt 0 ] && break
+            sleep 3
+          done
+
+          TOTAL=$(echo "$JSON" | jq '[.[].assets[].download_count] | add // 0')
           echo "total downloads: $TOTAL"
+
+          PREV=0
+          if [ -f assets/downloads.svg ]; then
+            PREV=$(grep -oE 'downloads: [0-9]+' assets/downloads.svg | grep -oE '[0-9]+' || echo 0)
+          fi
+          echo "previous SVG value: $PREV"
+
+          if [ "$TOTAL" -lt "$PREV" ]; then
+            echo "API returned $TOTAL but previous was $PREV — keeping previous SVG (likely API flake)"
+            exit 0
+          fi
+
           mkdir -p assets
           curl -sfL "https://img.shields.io/badge/downloads-${TOTAL}-brightgreen?style=flat-square" \
             -o assets/downloads.svg
