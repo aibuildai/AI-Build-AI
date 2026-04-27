@@ -11,6 +11,13 @@
 
 ---
 
+## News
+
+- **[4/27/2026]** Excited to announce **AIBuildAI Agent 2.0**! It has once again achieved #1 on OpenAI's MLE-Bench, reaching a score of 70.7% and substantially outperforming the agents ranked 2nd through 5th. Compared to version 1.0, Agent 2.0 introduces several technical advancements, which we will detail in an upcoming technical report. The 2.0 version will be available to Pro users soon.
+- **[4/24/2026]** In a [heart disease prediction competition](https://www.kaggle.com/competitions/playground-series-s6e2/overview) hosted by Kaggle, the model automatically developed by our AIBuildAI Agent ranked in the top 6.6%. Among 4,370 teams composed of human experts, this performance reaches the level of top-tier human AI experts. Model and code developed by the agent: [tasks/playground-series-s6e2](https://github.com/aibuildai/AI-Build-AI/tree/main/tasks/playground-series-s6e2).
+
+---
+
 https://github.com/user-attachments/assets/b6043d39-43df-464a-8e25-d24006ba99c8
 
 ---
