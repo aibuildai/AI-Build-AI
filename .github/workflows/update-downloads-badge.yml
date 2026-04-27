@@ -18,21 +18,30 @@ jobs:
 
       - name: Compute total downloads and write SVG
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
 
-          JSON=""
-          for i in 1 2 3 4 5; do
-            JSON=$(curl -sfH "Authorization: Bearer $GITHUB_TOKEN" \
-              "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100")
-            COUNT=$(echo "$JSON" | jq 'length')
-            echo "attempt $i: releases length=$COUNT"
-            [ "$COUNT" -gt 0 ] && break
-            sleep 3
-          done
+          # The /releases listing endpoint has a poisoned edge cache that
+          # returns an empty array ~80% of the time for this repo. The
+          # per-tag endpoint /releases/tags/<tag> uses a separate cache
+          # key and is 100% reliable. Strategy: list tags, fetch each
+          # release individually, sum download counts.
+          AUTH="Authorization: Bearer $GH_TOKEN"
+          API="https://api.github.com/repos/$REPO"
 
-          TOTAL=$(echo "$JSON" | jq '[.[].assets[].download_count] | add // 0')
+          TAGS=$(curl -sfH "$AUTH" "$API/tags?per_page=100" | jq -r '.[].name')
+          echo "tags discovered: $(echo "$TAGS" | tr '\n' ' ')"
+
+          TOTAL=0
+          for tag in $TAGS; do
+            DL=$(curl -sH "$AUTH" "$API/releases/tags/$tag" \
+              | jq '[.assets[]?.download_count] | add // 0' 2>/dev/null || echo 0)
+            DL=${DL:-0}
+            echo "  $tag: $DL"
+            TOTAL=$((TOTAL + DL))
+          done
           echo "total downloads: $TOTAL"
 
           PREV=0
@@ -43,7 +52,7 @@ jobs:
           echo "previous SVG value: $PREV"
 
           if [ "$TOTAL" -lt "$PREV" ]; then
-            echo "API returned $TOTAL but previous was $PREV — keeping previous SVG (likely API flake)"
+            echo "computed $TOTAL but previous was $PREV — keeping previous SVG"
             exit 0
           fi
 
