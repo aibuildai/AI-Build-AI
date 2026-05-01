@@ -44,6 +44,7 @@ logs/
 *.npy
 *.npz
 !tasks/**/checkpoint.pth
+!tasks/tgs-salt-identification-challenge/candidate_*/best_model.pth
 
 # IDEs
 .vscode/

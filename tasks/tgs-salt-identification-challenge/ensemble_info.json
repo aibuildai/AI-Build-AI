@@ -1,0 +1,44 @@
+{
+  "task": "tgs-salt-identification-challenge",
+  "method": "equal_weight_probability_average",
+  "members": [
+    {
+      "name": "segformer_mit_b2",
+      "weight": 0.5,
+      "checkpoint": "candidate_0/best_model.pth",
+      "fold": 0,
+      "stage": "stage1",
+      "val_miou_thr0p5": 0.8545,
+      "encoder": "mit_b2",
+      "decoder": "Segformer",
+      "input_size": 256,
+      "in_channels": 1,
+      "oof_miou": 0.8477
+    },
+    {
+      "name": "effnet_b4_unet_scse_hypercolumn",
+      "weight": 0.5,
+      "checkpoint": "candidate_1/best_model.pth",
+      "fold": 4,
+      "val_miou_thr0p5": 0.8225,
+      "encoder": "efficientnet-b4",
+      "decoder": "Unet+scSE+hypercolumn",
+      "input_size": 256,
+      "in_channels": 1,
+      "oof_miou": 0.8458
+    }
+  ],
+  "preprocessing": {
+    "image_size": 256,
+    "native_size": 101,
+    "channels": 1,
+    "mean": 0.449,
+    "std": 0.226,
+    "resize_interp": "INTER_LINEAR"
+  },
+  "tta": "horizontal_flip",
+  "downsample_to_native": "bilinear",
+  "threshold": 0.55,
+  "rle_format": "kaggle_tgs_salt_column_major_1_indexed",
+  "ensemble_oof_miou": 0.8550
+}
