@@ -201,4 +201,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
     journal={arXiv},
     url={https://arxiv.org/abs/2604.14455}
 }
+@article{zhang2026aibuildai2,
+    title={AIBuildAI-2: A Knowledge-Enhanced Agent for Automatically Building AI Models},
+    author={Ruiyi Zhang and Peijia Qin and Qi Cao and Li Zhang and Pengtao Xie},
+    year={2026},
+    journal={arXiv},
+    url={https://arxiv.org/abs/2605.27873}
+}
 ```
