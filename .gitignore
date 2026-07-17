@@ -47,6 +47,7 @@ logs/
 !tasks/tgs-salt-identification-challenge/candidate_*/best_model.pth
 !tasks/anomalous-diffusion-ood-detection/best_model.pth
 !tasks/anomalous-diffusion-ood-detection/predictions/**/*.npz
+!tasks/protein-variant-effect-prediction/best_model.pkl
 
 # IDEs
 .vscode/
