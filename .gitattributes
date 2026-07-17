@@ -1,1 +1,2 @@
 tasks/tgs-salt-identification-challenge/candidate_*/best_model.pth filter=lfs diff=lfs merge=lfs -text
+tasks/protein-variant-effect-prediction/best_model.pkl filter=lfs diff=lfs merge=lfs -text
