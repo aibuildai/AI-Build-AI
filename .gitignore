@@ -45,6 +45,8 @@ logs/
 *.npz
 !tasks/**/checkpoint.pth
 !tasks/tgs-salt-identification-challenge/candidate_*/best_model.pth
+!tasks/anomalous-diffusion-ood-detection/best_model.pth
+!tasks/anomalous-diffusion-ood-detection/predictions/**/*.npz
 
 # IDEs
 .vscode/

@@ -1,0 +1,4 @@
+# Regenerated training-corpus cache and inference outputs are not committed.
+_generated/
+output/
+__pycache__/
