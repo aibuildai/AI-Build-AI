@@ -1,41 +1,44 @@
 # Cancer Gene Identification on Biological Networks
 
-AI-generated solution for the NatureBench [1] task *Cancer Gene Identification on
-Biological Networks*, produced end-to-end by AIBuildAI. NatureBench **distilled
-this task** from the *Nature Biomedical Engineering* study of Su et al. [2]:
-the task's networks, features, and splits come from that paper, and its **TREE**
-model is the published SOTA we are scored against. This solution's own method is
-*not* TREE and does not reuse TREE's architecture — it is an independent
-multi-task Chebyshev GNN (MTGCN-style; see *Final model* below). Given a
-biological interaction network, 64-d multi-omics node features, and labeled
-train/validation nodes, the method must prioritize **cancer-associated genes**
-among the held-out test nodes, across eight networks. The headline metric is
-AUPRC.
+Autonomous solution to *Cancer Gene Identification on Biological Networks*,
+produced end-to-end by **AIBuildAI** — an autonomous system that builds AI
+models, designing, implementing, and evaluating candidate solutions with no
+human in the loop, and able to recursively self-evolve. The task is distilled
+from the *Nature Biomedical Engineering* study of Su et al. [1]: its networks,
+features, and splits come from that paper, and its **TREE** model is the
+published state of the art we compare against. This solution's method is *not*
+TREE and does not reuse TREE's architecture — it is an independent multi-task
+Chebyshev-spectral GNN (MTGCN-style; see *Final model* below). Given a biological
+interaction network, 64-d multi-omics node features, and labeled train/validation
+nodes, it prioritizes **cancer-associated genes** among the held-out test nodes,
+across eight networks. The headline metric is **AUPRC**.
+
+📝 **Read the blog:** https://www.aibuildai.io/blog-cancer-gene-identification
 
 ## Result
 
-NatureBench reports the mean per-network improvement relative to the source
-paper's published SOTA as a normalized gap `g`. Across the eight networks:
+Across the eight networks, AIBuildAI reaches a **mean AUPRC of 0.774**, against
+**~0.716** for the published SOTA (TREE [1]), and surpasses TREE on **6 of the 8**
+networks.
 
-| | Mean AUPRC | `g` vs SOTA | Networks won |
+| | Mean AUPRC | Networks won |
+|---|---|---|
+| **AIBuildAI** | **0.774** | **6 / 8** |
+| Published SOTA — TREE [1] | ~0.716 | — |
+
+Per-network AUPRC versus the published SOTA (sorted by margin) — above it on six
+of the eight networks, behind only on `cpdb` and `iref_v15`:
+
+| Network | Our AUPRC | TREE (SOTA) | Δ AUPRC |
 |---|---|---|---|
-| **AIBuildAI** | **0.774** | **+0.103** (surpass-SOTA) | **6 / 8** |
-| Published SOTA — TREE [2] | ~0.716 | 0.000 (reference) | — |
-
-Per-network AUPRC versus the published SOTA — above it on six of the eight
-networks; behind on `cpdb` and `iref_v15`:
-
-| Network | Our AUPRC | TREE SOTA | Δ (g) |
-|---|---|---|---|
-| cpdb | 0.779 | 0.791 | −0.015 |
-| stringdb | 0.793 | 0.765 | +0.038 |
-| pcnet | 0.768 | 0.672 | +0.143 |
-| iref_v15 | 0.754 | 0.815 | −0.075 |
-| iref_v9 | 0.694 | 0.681 | +0.018 |
-| multinet | 0.777 | 0.686 | +0.132 |
-| mtg | 0.773 | 0.540 | +0.431 |
-| ltg | 0.843 | 0.731 | +0.153 |
-| | | **mean g** | **+0.103** |
+| mtg | 0.773 | 0.540 | +0.233 |
+| ltg | 0.843 | 0.731 | +0.112 |
+| pcnet | 0.768 | 0.672 | +0.096 |
+| multinet | 0.777 | 0.686 | +0.091 |
+| stringdb | 0.793 | 0.765 | +0.028 |
+| iref_v9 | 0.694 | 0.681 | +0.013 |
+| cpdb | 0.779 | 0.791 | −0.012 |
+| iref_v15 | 0.754 | 0.815 | −0.061 |
 
 ## Background
 
@@ -52,46 +55,38 @@ the full diversity of interaction databases.
 Each of the eight instances is a **transductive node-classification** problem on
 one biological network.
 
-- **Input** per network: an `N×N` adjacency matrix, an `N×64` multi-omics feature
-  matrix (mutation frequency, methylation, gene expression, copy-number across 16
-  cancer types), and boolean masks + labels for train / validation nodes. Test
-  nodes are given as a mask; their labels are hidden.
-- **Output** per network: a probability in `[0,1]` for every test node.
-- **Metric**: AUPRC (primary) and AUROC per network, aggregated as the mean
-  improvement `g` relative to the paper's per-network SOTA.
+- **Input**: an `N×N` adjacency matrix, an `N×64` multi-omics feature matrix
+  (mutation, methylation, expression, copy-number across 16 cancer types), and
+  labeled train/validation masks; test-node labels are hidden.
+- **Output**: a probability in `[0,1]` for every test node.
+- **Metric**: per-network AUPRC (primary), compared against the paper's published SOTA.
 - **Instances**: six PPI networks (cpdb, stringdb, pcnet, iref_v15, iref_v9,
-  multinet) and two heterogeneous networks (mtg, ltg); N ranges 12k–26k nodes,
-  cancer-gene positives 14–29%.
+  multinet) and two heterogeneous networks (mtg, ltg); N ≈ 12k–26k, positives 14–29%.
 
 ## Final model
 
-A **multi-task Chebyshev-spectral graph neural network (MTGCN)** trained independently per
-network:
+A **multi-task Chebyshev-spectral GNN (MTGCN)**, trained independently per network:
 
-- **Encoder.** Two `ChebConv` layers (K=2 Chebyshev order, 300→100) over the node
-  features, with DropEdge and dropout.
-- **Features.** The 64-d multi-omics vector is augmented with **five structural
-  descriptors computed from the adjacency alone** — degree, PageRank, k-core
-  number (an O(E) Batagelj–Zaversnik decomposition), local clustering
-  coefficient, and eigenvector centrality — each z-scored.
-- **Multi-task heads.** A `ChebConv` cancer-gene classifier plus a self-supervised
-  **link-prediction** head (inner product of embeddings on real vs random edges)
-  that share the encoder, combined with **learned homoscedastic uncertainty
-  weights** (the Kendall et al. loss).
+- **Encoder.** Two `ChebConv` layers (K=2, 300→100), with DropEdge and dropout.
+- **Features.** The 64-d multi-omics vector plus **five label-free structural
+  descriptors** (degree, PageRank, k-core number, local clustering, eigenvector
+  centrality), each z-scored.
+- **Multi-task heads.** A `ChebConv` cancer-gene classifier and a self-supervised
+  **link-prediction** head share the encoder, balanced by **learned uncertainty
+  weights** (Kendall et al.).
 - **Training.** Adam with class-imbalance `pos_weight`, gradient clipping, and an
-  **EMA of the weights**; an adaptive per-network step budget keeps the full
-  eight-network run inside its wall-clock cap. Total run time ≈ **15 minutes** on
-  one A100.
+  **EMA of the weights**; an adaptive per-network step budget keeps the full run
+  under its time cap (≈ **15 minutes** on one A100).
 
 ## Files
 
 | File | What it is |
 |---|---|
-| `run.py` | End-to-end pipeline — per network, builds features, trains the MTGCN, writes `output/<network>/predictions.npy` |
-| `model.py` | The MTGCN (ChebConv encoder + classifier + link head + uncertainty weights) and edge helpers |
-| `graph_features.py` | The five label-free structural features (degree, PageRank, k-core, clustering, eigenvector centrality) |
-| `config.py` | Every hyperparameter, in one place |
-| `predictions/` | The produced `predictions.npy` for all eight networks + `score.json` — the exact submission that scored mean AUPRC 0.774 (`g` +0.103) |
+| `run.py` | End-to-end pipeline: builds features, trains the MTGCN, writes predictions per network |
+| `model.py` | The MTGCN (encoder + classifier + link head + uncertainty weights) and edge helpers |
+| `graph_features.py` | The five label-free structural features |
+| `config.py` | All hyperparameters |
+| `predictions/` | `predictions.npy` for all eight networks + `score.json` — the exact submission (mean AUPRC 0.774) |
 
 Note: like the two-stage genomics solution, this method **trains at inference
 time** — the transductive GNN is fit fresh per network — so there is no persisted
@@ -111,12 +106,9 @@ submission; re-running reproduces the score to within GPU/training nondeterminis
 
 ## References
 
-[1] Wang, Y. et al. NatureBench: Can Coding Agents Match the Published SOTA of
-Nature-Family Papers? arXiv:2606.24530 (2026).
-
-[2] Su, X., Hu, P., Li, D., Zhao, B., Niu, Z., Herget, T., Yu, P. S. & Hu, L.
+[1] Su, X., Hu, P., Li, D., Zhao, B., Niu, Z., Herget, T., Yu, P. S. & Hu, L.
 Interpretable identification of cancer genes across biological networks via
 transformer-powered graph representation learning. *Nature Biomedical
-Engineering* **9**, 371–389 (2025). DOI: 10.1038/s41551-024-01312-5 — **the source
-paper this NatureBench task is distilled from**; its TREE model is the published
-SOTA this solution is scored against.
+Engineering* **9**, 371–389 (2025). DOI: 10.1038/s41551-024-01312-5 — the source
+paper this task is distilled from; its TREE model is the published SOTA this
+solution is compared against.
