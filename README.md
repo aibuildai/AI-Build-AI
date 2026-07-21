@@ -57,9 +57,9 @@ There are three versions. **V2.5 (Max)** is the current, most capable version. *
 
 | Version | Plan | To run it |
 |---|---|---|
-| **V2.5 (Max)** — current | Max subscription | `aibuildai login` (Max plan) + a model API key (Anthropic or DeepSeek) |
-| **V2 (Pro)** | Pro subscription | `aibuildai login` (Pro plan) + an Anthropic API key |
-| **V1** | free | an Anthropic API key (no account) |
+| **V2.5 (Max)** — current | Max subscription | `aibuildai login` (Max plan) + a Claude Code login or model API key |
+| **V2 (Pro)** | Pro subscription | `aibuildai login` (Pro plan) + a Claude Code login or Anthropic API key |
+| **V1** | free | a Claude Code login or Anthropic API key (no account) |
 
 Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.io); see the account page for the available plans.
 
@@ -80,17 +80,25 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    aibuildai whoami     # should show an active Max plan
    ```
 
-4. **Set your model-provider API key.** This is separate from the aibuildai
-   subscription above: the subscription (`aibuildai login`) lets you run the
-   product; this key pays for the AI model calls. aibuildai uses Anthropic
-   (Claude) by default, so set your Anthropic API key:
+4. **Sign in to Claude Code or set your API key.**
+
+   If Claude Code is already signed in on this machine, no Anthropic API key
+   is needed. AIBuildAI automatically uses the local Claude Code credentials.
+
+   If Claude Code is not signed in, run:
+
+   ```bash
+   claude auth login
+   ```
+
+   You can also use an Anthropic API key instead:
 
    ```bash
    export AIBUILDAI_API_KEY=your-anthropic-api-key
    ```
 
-   DeepSeek is also supported — set a `deepseek-*` id in the config's
-   `llm.model` and put your DeepSeek key in the same `AIBUILDAI_API_KEY`.
+   To use DeepSeek, set a `deepseek-*` model in the config and put your
+   DeepSeek API key in `AIBUILDAI_API_KEY`.
 
 5. **Run.** V2.5 is driven by a YAML config:
 
@@ -119,7 +127,18 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    aibuildai whoami     # should show an active Pro plan
    ```
 
-4. **Set credentials.**
+4. **Sign in to Claude Code or set your API key.**
+
+   If Claude Code is already signed in on this machine, no Anthropic API key
+   is needed. AIBuildAI automatically uses the local Claude Code credentials.
+
+   If Claude Code is not signed in, run:
+
+   ```bash
+   claude auth login
+   ```
+
+   You can also use an Anthropic API key instead:
 
    ```bash
    export ANTHROPIC_API_KEY=your-api-key
@@ -144,7 +163,18 @@ No account or subscription required.
    curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/v1.0-latest/aibuildai-linux-x86_64.tar.gz | tar xz && ./aibuildai-linux-x86_64-*/install.sh
    ```
 
-2. **Set your Anthropic API key.**
+2. **Sign in to Claude Code or set your API key.**
+
+   If Claude Code is already signed in on this machine, no Anthropic API key
+   is needed. AIBuildAI automatically uses the local Claude Code credentials.
+
+   If Claude Code is not signed in, run:
+
+   ```bash
+   claude auth login
+   ```
+
+   You can also use an Anthropic API key instead:
 
    ```bash
    export ANTHROPIC_API_KEY=your-api-key
