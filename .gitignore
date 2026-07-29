@@ -49,6 +49,10 @@ logs/
 !tasks/anomalous-diffusion-ood-detection/predictions/**/*.npz
 !tasks/protein-variant-effect-prediction/best_model.pkl
 !tasks/cancer-gene-identification/predictions/**/*.npy
+!tasks/ioai2025/**/*.pth
+!tasks/ioai2025/**/*.pkl
+!tasks/ioai2025/**/*.npy
+!tasks/ioai2025/**/*.npz
 
 # IDEs
 .vscode/
