@@ -1,0 +1,15 @@
+{
+  "classes": [
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "lynx",
+    "opossum",
+    "rabbit",
+    "skunk",
+    "squirrel"
+  ],
+  "clip_extra_label": "other",
+  "clip_model": "openai/clip-vit-large-patch14"
+}
