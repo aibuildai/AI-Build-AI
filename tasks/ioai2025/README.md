@@ -4,11 +4,12 @@ AIBuildAI scored 568.49 / 600 across all six individual-contest tasks, surpassin
 
 Given only the task descriptions and provided data, the AIBuildAI Agent autonomously built solutions for all six tasks, completing the full AI development process — including problem understanding, model and algorithm design, code implementation, training, analyzing experimental results, debugging failures, and iteratively improving solutions — without human intervention.
 
-This repo contains autonomous **AIBuildAI** solutions to all six tasks of the **IOAI 2025** Individual
-Contest (Beijing, 284 competitors). Each task was given only the problem statement and
-data; the agent chose the approach, wrote the code, and produced a submission with no
-human involvement. Graded with the organisers' scoring code
-([IOAI-official/IOAI-2025](https://github.com/IOAI-official/IOAI-2025)).
+Read more: https://www.aibuildai.io/blog-ioai
+
+
+This repository contains the solutions autonomously developed by AIBuildAI for all six tasks in the IOAI 2025 Individual Contest (Beijing, 284 competitors). Each task was provided only with the official problem statement and dataset. Given a six-hour budget per task, the AIBuildAI Agent independently designed the approach, implemented the solution, and generated the final submission. All solutions were evaluated using the official organizer scoring code:
+[IOAI-official/IOAI-2025](https://github.com/IOAI-official/IOAI-2025).
+
 
 Each subfolder is self-contained and follows the same layout: a `README.md`, a
 self-contained reproducing script (`inference.py` / `run.py`), the bundled artifacts it
