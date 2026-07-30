@@ -2,7 +2,9 @@
 
 AIBuildAI scored 568.49 / 600 across all six individual-contest tasks, surpassing the human champion score (542.05) and ranking first among 284 competitors.
 
-Given only the task descriptions and provided data, the AIBuildAI Agent autonomously built solutions for all six tasks, completing the full AI development process — including problem understanding, model and algorithm design, code implementation, training, analyzing experimental results, debugging failures, and iteratively improving solutions — without human intervention.
+Given only the task descriptions and provided data, the AIBuildAI Agent autonomously built solutions for all six tasks within a six-hour budget per task, completing the full AI development process — including problem understanding, model and algorithm design, code implementation, training, analyzing experimental results, debugging failures, and iteratively improving solutions — without human intervention.
+
+
 
 Read more: https://www.aibuildai.io/blog-ioai
 
