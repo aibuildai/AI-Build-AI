@@ -1,0 +1,74 @@
+# Candidate 1, attempt 6 -- FINAL round: fourth (gentlest) annealing cycle on
+# ALL 8 GPUs (candidate 4 paused; manager reassigned GPUs 0-7 to candidate 1).
+# Context: full fine-tune progression on the frozen 24-ep protocol:
+#   attempt_3  step  3600  -> 22.475
+#   attempt_4  step  8284  -> 22.984  (+0.51, cycle peak 1e-5)
+#   attempt_5  step 11852  -> 23.200  (+0.22, cycle peak 5e-6)
+# This attempt resumes from attempt_5/checkpoint_latest.pth (model+optimizer+EMA
+# @ 11852, saved AFTER the 23.200 eval state) and opens a FOURTH cosine window
+# at peak 3e-6 (between half and two-thirds of the last peak; the effective
+# global batch grows 6 -> 8 with the extra GPUs, which supports the slightly
+# higher-than-geometric choice). Consolidated full-state-dict resume is
+# world-size agnostic, so resharding 6 -> 8 ranks is safe; the log lines
+# "resume model load missing=0", "optimizer state resumed" and
+# "EMA state resumed (577/577)" are the verification gate.
+# NOTE on the optimizer-resume LR bug candidate 4 hit: this script recomputes
+# cur_lr from the CONFIG every optimizer step and force-assigns it to all
+# param_groups (rt1_ac_adapt-train.py lines 596-605), so any LR restored by
+# load_optim_sd is overwritten before the first step. Not affected.
+# Best-model guards: initial_best_metric / initial_best_subset seed the
+# comparison thresholds with attempt_5's known bests so best_model.pth is only
+# written by a strictly better model. If nothing improves, attempt_6 produces
+# no best_model.pth and attempt_5's submission remains the standing final.
+data_dir: "./data/task"  # expects train/ episodes in IRASim RT-1 format
+output_dir: "./output"
+resume_checkpoint: null  # final round resumed from the previous iteration; set a path to resume
+initial_best_metric: 23.200233290474348   # attempt_5 final full-24-ep PSNR (guard)
+initial_best_subset: 24.16658679415151    # attempt_5 best subset-6 PSNR @10000 (guard)
+checkpoint_interval_steps: 1000      # consolidated ckpt every N optimizer steps
+checkpoint_interval_seconds: 1800    # ... or every 30 min wall clock
+test_mode: false                     # PRODUCTION
+test_max_samples: null
+
+# ---- FROZEN evaluation protocol (official action-conditioned inference example) ----
+# Identical to attempt_1/2/3/4/5/prev_best_attempt -- do not change.
+num_steps: 35
+guidance: 0
+chunk_size: 12
+num_latent_conditional_frames: 1
+action_scaler: 20.0                  # recorded in protocol dict of every results.json
+gripper_scale: 1.0
+# Frozen 24-episode validation list (identical to all prior attempts).
+val_episodes: ["335", "4371", "4969", "9072", "9105", "10594", "18534", "21690",
+               "26460", "31478", "33503", "35641", "45045", "50592", "51069",
+               "51759", "51918", "56929", "63432", "72685", "74959", "76340",
+               "78702", "79774"]
+
+# ---- optimisation (full fine-tune, resumed at step 11852, fourth LR cycle) ----
+learning_rate: 0.000003              # NEW peak 3e-6 (fourth annealing cycle)
+lr_schedule_offset: 11852            # schedule computed on steps AFTER resume
+lr_decay_steps: 3400                 # cosine window ~= expected steps this round
+min_lr_ratio: 0.1                    # floor = 3e-7
+weight_decay: 0.01
+warmup_steps: 50                     # brief re-warmup to 3e-6
+batch_size: 1                        # per GPU (8 GPUs)
+grad_accum_steps: 1                  # effective global batch 8*1*1 = 8
+grad_clip: 1.0
+gradient_checkpointing: true
+sac_mode: "mm_only"
+ema_decay: 0.995
+seed: 42
+num_workers: 2
+num_folds: 1                         # CV not applicable to generative world models
+
+# ---- run control ----
+max_train_steps: null                # governed by wall-clock budget below
+train_time_budget_seconds: 9600      # 2h40m of training incl. mid-run vals
+val_interval_steps: 1000             # subset val ~3x per run (insurance snapshots)
+log_interval_steps: 10
+run_baseline_gate: false             # gate passed in attempt_2 (15.24, window 14-17)
+gate_episodes: 24
+run_eval: true
+final_eval_episodes: 24              # full frozen list, EMA weights
+val_subset_fraction: 0.25            # 6-ep mid-run subset (~5-6 min each)
+save_best_on_subset: true            # mid-run EMA insurance snapshots
