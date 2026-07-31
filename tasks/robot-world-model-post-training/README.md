@@ -1,4 +1,4 @@
-# Autonomous Post-Training of a Robot World Model
+# RT-1 World Model: Autonomous Post-Training of Cosmos-Predict2.5
 
 Built on NVIDIA Cosmos. An AIBuildAI agent autonomously post-trained the open
 [Cosmos-Predict2.5-2B](https://arxiv.org/abs/2511.00062) action-conditioned
@@ -59,8 +59,8 @@ partial unfreeze, high-rank adapter, LoRA continuation) and converged on:
   (training-free, implemented by the agent from the paper and A/B validated
   on its held-out episodes before adoption).
 
-All Python files are exactly as the agent produced them; the only human edit
-is path parameterization through a single `WM_ROOT` environment variable.
+The solution code is the agent's own, lightly adapted for standalone use
+(path parameterization, config defaults, and minor fixes).
 
 ## Files
 
@@ -74,7 +74,7 @@ is path parameterization through a single `WM_ROOT` environment variable.
 | `NOTICE` | NVIDIA Open Model License attribution |
 
 Fine-tuned weights `best_model.pth` (4.25 GB, above GitHub's file limit):
-**https://huggingface.co/AIBUILDAI-Inc/robot-world-model**. Place at
+**https://huggingface.co/AIBUILDAI-Inc/rt1-world-model**. Place at
 `$WM_ROOT/finetuned/best_model.pth`. The weights are a derivative model of
 Cosmos-Predict2.5-2B under the NVIDIA Open Model License (see `NOTICE`).
 

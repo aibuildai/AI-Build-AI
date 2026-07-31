@@ -1,20 +1,20 @@
 #!/usr/bin/env python
-"""Candidate 1: FULL fine-tune of Cosmos-Predict2.5-2B robot/action-cond on RT-1.
+"""FULL fine-tune of Cosmos-Predict2.5-2B robot/action-cond on RT-1.
 
-Design (model_designs.json candidate 1 v0):
+Design:
 - ALL DiT parameters trainable (attn, MLP, adaLN, norms, embedders, final layer).
-- FSDP2 (fully_shard) full-shard across the candidate's GPUs, fp32 sharded master
+- FSDP2 (fully_shard) full-shard across all GPUs, fp32 sharded master
   params + bf16 compute (MixedPrecisionPolicy), selective activation checkpointing.
 - Flow-matching loss via the repo's own model.training_step() -> identical
   parameterization / timestep sampling to the released training objective.
 - EMA over the sharded fp32 params (local-shard EMA; evaluated weights are EMA).
 - Frozen eval protocol = official action-conditioned inference example:
   guidance 0, 35 steps, 13-frame chunks (12 actions), 1 latent conditional frame,
-  action_scaler 20.0 (recorded in protocol dict). Frozen 24-episode validation
-  list reused from prev_best_attempt/results.json.
+  action_scaler 20.0 (recorded in protocol dict). Fixed held-out validation
+  episode list from config.
 - Actions strictly from annotation JSON (videos/action.npy is a known all-zeros trap).
 
-Launch: torchrun --nproc_per_node=<n> rt1_ac_adapt-train.py --config <config.yaml>
+Launch: torchrun --nproc_per_node=<n> train.py --config <config.yaml>
 (also runs single-process without torchrun; FSDP mesh of size 1).
 """
 import os
@@ -138,7 +138,7 @@ class RT1WindowDataset(torch.utils.data.Dataset):
 
 
 # --------------------------------------------------------------------------
-# generation (identical to official chunked rollout / prev attempt protocol)
+# generation (identical to the official chunked-rollout inference protocol)
 # --------------------------------------------------------------------------
 def chunked_rollout(v2w, first_frame_rgb, actions_scaled, gen_cfg):
     import torchvision
@@ -202,9 +202,6 @@ class ShardEMA:
         for p, b in zip(self.params, self.backup):
             self._local(p).copy_(b)
         self.backup = None
-
-    def state_locals(self):
-        return self.shadow
 
 
 # --------------------------------------------------------------------------
@@ -351,14 +348,19 @@ def main():
     }
     gen_cfg = {k: protocol[k] for k in
                ["num_steps", "guidance", "chunk_size", "num_latent_conditional_frames"]}
-    gen_cfg["guidance"] = protocol["guidance"]
     scaler_vec = np.array([protocol["action_scaler"]] * 6 + [protocol["gripper_scale"]],
                           np.float32)
     val_ids = [str(e) for e in protocol["val_episodes"]]
 
-    # official task metric (dynamic import from read-only data dir)
+    # official task metric (dynamic import from the data dir, if provided there)
     sys.path.insert(0, data_dir)
-    import task_metric as tm
+    try:
+        import task_metric as tm
+    except ImportError:
+        tm = None
+        log("task_metric module not found in data_dir; metric scoring disabled. "
+            "Validation/final evals are skipped and best-model selection falls "
+            "back to (negative) training loss.", rank)
 
     # ---- dataset ----
     all_ids = sorted(os.listdir(Path(data_dir) / "train" / "videos"))
@@ -366,16 +368,23 @@ def main():
     if cfg.get("test_mode", False):
         cap = int(cfg.get("test_max_samples") or 100)
         train_ids = train_ids[:cap]
+    if int(cfg["batch_size"]) != 1:
+        raise ValueError(
+            "batch_size must be 1 (per GPU): the action-conditioning input path "
+            "(_get_data_batch_input) pairs exactly one action sequence with the "
+            "batch. Scale the effective batch via world size and grad_accum_steps.")
     ds = RT1WindowDataset(data_dir, train_ids, int(cfg["chunk_size"]), scaler_vec, seed=seed)
     if world > 1:
         sampler = torch.utils.data.DistributedSampler(ds, num_replicas=world, rank=rank,
                                                       shuffle=True, seed=seed)
     else:
         sampler = torch.utils.data.RandomSampler(ds, generator=torch.Generator().manual_seed(seed))
+    # persistent_workers must stay False: workers re-fork each epoch so they see
+    # the updated ds.epoch used for window-start sampling.
     loader = torch.utils.data.DataLoader(
         ds, batch_size=int(cfg["batch_size"]), sampler=sampler,
         num_workers=int(cfg.get("num_workers", 2)), pin_memory=True, drop_last=True,
-        persistent_workers=int(cfg.get("num_workers", 2)) > 0)
+        persistent_workers=False)
     log(f"train episodes: {len(train_ids)}, val episodes: {len(val_ids)}", rank)
 
     # ---- model ----
@@ -462,8 +471,9 @@ def main():
             except Exception as e:
                 log(f"optimizer resume failed ({e}); fresh optimizer", rank)
         log(f"resumed at step {gstep}, best_metric {best_metric:.3f}", rank)
-    # allow the tuner to carry the true best full-eval metric across attempts
-    # (checkpoint_latest.pth may have been written before the final eval updated it)
+    # optional override: seed the best-model threshold from a prior run
+    # (checkpoint_latest.pth may have been written before the final eval updated
+    # it); null/absent = always improvable
     if cfg.get("initial_best_metric") is not None:
         best_metric = float(cfg["initial_best_metric"])
         log(f"initial_best_metric override: {best_metric:.3f}", rank)
@@ -498,10 +508,12 @@ def main():
         del resume_ck
 
     def save_ckpt(path, with_optim=True):
+        # resume checkpoint: keep fp32 master weights and EMA verbatim so that
+        # save -> resume round trips do not quantize through bf16
         t0 = time.time()
-        net_sd = full_model_sd(net)
+        net_sd = full_model_sd(net, dtype=torch.float32)
         ema.swap_in()
-        ema_sd = full_model_sd(net)
+        ema_sd = full_model_sd(net, dtype=torch.float32)
         ema.swap_out()
         osd = full_optim_sd(net, optim) if with_optim else None
         if is0:
@@ -527,16 +539,16 @@ def main():
         if dist.is_initialized():
             dist.barrier()
 
-    def save_best(score, per_ep_scores):
+    def save_best(score, tag="full_val"):
         nonlocal best_metric
         best_metric = score
-        save_ema_model(score, "full_val")
+        save_ema_model(score, tag)
 
     t_start = time.time()
 
     # ---- baseline gate (zero-shot, official protocol) ----
     n_gate = int(cfg.get("gate_episodes", 0))
-    if cfg.get("run_baseline_gate", False) and n_gate > 0 and gstep == 0:
+    if cfg.get("run_baseline_gate", False) and n_gate > 0 and gstep == 0 and tm is not None:
         gate_ids = val_ids[:n_gate]
         log(f"running zero-shot baseline gate on {len(gate_ids)} episodes...", rank)
         agg, _ = evaluate(v2w, model, gate_ids, data_dir, gen_cfg, scaler_vec, rank, tm,
@@ -561,10 +573,11 @@ def main():
     grad_clip = float(cfg.get("grad_clip", 1.0))
 
     loss_hist = []
-    # initial_best_subset: carry the prior attempt's best subset-val PSNR so the
-    # mid-run insurance snapshot only overwrites best_model.pth when the EMA
-    # actually beats the previous attempt's subset quality.
-    best_subset = {"psnr": float(cfg.get("initial_best_subset", -1e9))}
+    # initial_best_subset (optional): seed the subset-val threshold from a prior
+    # run so the mid-run insurance snapshot only overwrites best_model.pth when
+    # the EMA actually beats it; null/absent = always improvable.
+    init_sub = cfg.get("initial_best_subset")
+    best_subset = {"psnr": float(init_sub) if init_sub is not None else -1e9}
     last_ck = time.time()
     micro = 0
     done = False
@@ -577,14 +590,18 @@ def main():
         for batch in loader:
             if done:
                 break
-            video = batch["video"].cuda(non_blocking=True)  # (B,C,T,H,W) uint8
-            action = batch["action"][0].cuda(non_blocking=True)  # (12,7); B==1
+            video = batch["video"].cuda(non_blocking=True)  # (1,C,T,H,W) uint8
+            # (12,7); batch_size==1 is enforced at startup
+            action = batch["action"][0].cuda(non_blocking=True)
             db = v2w._get_data_batch_input(
                 video=video, prompt="", num_conditional_frames=int(
                     cfg["num_latent_conditional_frames"]),
                 negative_prompt=NEG_PROMPT, use_neg_prompt=False, action=action)
             _, loss = model.training_step(db, gstep)
             loss = loss.mean()
+            # skip FSDP gradient reduce-scatter on non-final micro-steps
+            if accum > 1 and hasattr(net, "set_requires_gradient_sync"):
+                net.set_requires_gradient_sync((micro + 1) % accum == 0)
             (loss / accum).backward()
             loss_hist.append(float(loss.detach().float()))
             micro += 1
@@ -622,12 +639,14 @@ def main():
                           "train_loss": tl, "grad_norm": gn_f, "learning_rate": cur_lr,
                           "steps_per_second": gstep / el})
 
-                if val_interval and gstep % val_interval == 0:
+                if val_interval and gstep % val_interval == 0 and tm is not None:
                     n_sub = max(2, int(round(len(val_ids) * subset_frac)))
                     ema.swap_in()
-                    agg, _ = evaluate(v2w, model, val_ids[:n_sub], data_dir, gen_cfg,
-                                      scaler_vec, rank, tm)
-                    ema.swap_out()
+                    try:
+                        agg, _ = evaluate(v2w, model, val_ids[:n_sub], data_dir, gen_cfg,
+                                          scaler_vec, rank, tm)
+                    finally:
+                        ema.swap_out()
                     jlog({"event": "val_subset", "step": gstep,
                           "elapsed_seconds": time.time() - t_start, **(agg or {})})
                     if is0:
@@ -662,19 +681,36 @@ def main():
 
     # ---- final eval on frozen list (EMA weights) ----
     results = {}
-    if cfg.get("run_eval", True):
+    if cfg.get("run_eval", True) and tm is None:
+        # no task metric available: fall back to (negative) recent training loss
+        score = -float(np.mean(loss_hist[-100:])) if loss_hist else -1e9
+        log(f"task_metric unavailable; best-model selection falls back to "
+            f"-train_loss = {score:.4f}", rank)
+        jlog({"event": "final_val", "step": gstep, "score_metric": "neg_train_loss",
+              "score": score, "elapsed_seconds": time.time() - t_start})
+        if score > best_metric:
+            save_best(score, tag="neg_train_loss")
+        if is0:
+            results = {"score": score, "score_metric": "neg_train_loss",
+                       "step": gstep, "protocol": protocol,
+                       "elapsed_seconds": time.time() - t_start}
+            with open(out_dir / "results.json", "w") as f:
+                json.dump(results, f, indent=2)
+    elif cfg.get("run_eval", True):
         n_final = int(cfg.get("final_eval_episodes", len(val_ids)))
         final_ids = val_ids[:n_final]
         log(f"final eval on {len(final_ids)} episodes (EMA weights)...", rank)
         ema.swap_in()
-        agg, per_ep = evaluate(v2w, model, final_ids, data_dir, gen_cfg, scaler_vec,
-                               rank, tm, compute_static=True)
-        ema.swap_out()
+        try:
+            agg, per_ep = evaluate(v2w, model, final_ids, data_dir, gen_cfg, scaler_vec,
+                                   rank, tm, compute_static=True)
+        finally:
+            ema.swap_out()
         jlog({"event": "final_val", "step": gstep,
               "elapsed_seconds": time.time() - t_start, **(agg or {})})
         score = agg["psnr"]
         if score > best_metric:
-            save_best(score, per_ep)
+            save_best(score)
         else:
             log(f"score {score:.3f} did not beat best {best_metric:.3f}; best_model kept", rank)
         if is0:
