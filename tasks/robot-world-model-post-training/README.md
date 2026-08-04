@@ -5,6 +5,8 @@ Built on NVIDIA Cosmos. An AIBuildAI agent autonomously post-trained the open
 world model on the RT-1 robot manipulation domain: 29 hours on an 8x A100
 node, no human intervention between launch and delivery.
 
+📖 **Blog post**: [AIBuildAI autonomously post-trains a robot world model to near state-of-the-art video prediction in 29 hours](https://www.aibuildai.io/blog-robot-world-model)
+
 ## Result
 
 Official IRASim short-trajectory benchmark, RT-1 test split (4,799 clips,
