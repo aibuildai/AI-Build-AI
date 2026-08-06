@@ -16,7 +16,9 @@
 
 ## News
 
+- **[8/4/2026]** **AIBuildAI Science** is available to [Science users](https://www.aibuildai.io/#products): a second search method built for scientific work, OpenAI models, tasks from a description, paper writing, per-run GPU selection, kernel-enforced resource ceilings, and resume without editing. [Release notes and download](https://github.com/aibuildai/AI-Build-AI/releases/tag/v2.7.0).
 - **[8/3/2026]** AIBuildAI autonomously post-trained NVIDIA's open Cosmos world model for robot video prediction, with no human intervention. On the official IRASim RT-1 trajectory-to-video benchmark, the delivered model scores 25.56 PSNR and 0.845 SSIM, the highest published SSIM on this benchmark to date, up from the base model's 17.75 PSNR and 0.716 SSIM. [Read the blog post](https://www.aibuildai.io/blog-robot-world-model). Model and code developed by the Agent: [tasks/robot-world-model-post-training](https://github.com/aibuildai/AI-Build-AI/tree/main/tasks/robot-world-model-post-training). Model weights: [AIBUILDAI-Inc/robot-world-model](https://huggingface.co/AIBUILDAI-Inc/robot-world-model).
+- **[7/20/2026]** AIBuildAI built a state-of-the-art model for reliable anomalous diffusion analysis, surpassing the method by Feng et al. published in *Nature Computational Science* in 2024 across 8 of 10 settings. [Read the blog](https://www.aibuildai.io/blog-anomalous-diffusion).
 - **[6/17/2026]** The **AIBuildAI Agent 2.5** version is made available to [Max users](https://www.aibuildai.io/#products): a live build dashboard, run replay, cross-run memory, MCP research tools, and DeepSeek support. [Release notes and download](https://github.com/aibuildai/AI-Build-AI/releases/tag/v2.5.1).
 - **[5/26/2026]** The **AIBuildAI Agent 2.0** version is made available to [Pro users](https://www.aibuildai.io/#products).
 - **[5/1/2026]** In the [TGS Salt Identification Challenge](https://www.kaggle.com/competitions/tgs-salt-identification-challenge) hosted by Kaggle, the model automatically developed by our AIBuildAI Agent ranked in the top 5.7%. Among 3,219 teams composed of human experts, this performance reaches the level of top-tier human AI experts. Model and code developed by the Agent: [tasks/tgs-salt-identification-challenge](https://github.com/aibuildai/AI-Build-AI/tree/main/tasks/tgs-salt-identification-challenge).
@@ -54,17 +56,66 @@ On OpenAI [MLE-Bench](https://github.com/openai/mle-bench), AIBuildAI ranked #1,
 
 AIBuildAI requires a **Linux x86_64** machine (Ubuntu 20.04 or newer).
 
-There are three versions. **V2.5 (Max)** is the current, most capable version. **V2 (Pro)** and **V1 (free)** remain available.
+There are four versions. **AIBuildAI Science** is the current, most capable version. **V2.5 (Max)**, **V2 (Pro)** and **V1 (free)** remain available.
 
 | Version | Plan | To run it |
 |---|---|---|
-| **V2.5 (Max)** — current | Max subscription | `aibuildai login` (Max plan) + a Claude Code login or model API key |
+| **AIBuildAI Science** — current | Science subscription | `aibuildai login` (Science plan) + a Claude Code login or model API key |
+| **V2.5 (Max)** | Max subscription | `aibuildai login` (Max plan) + a Claude Code login or model API key |
 | **V2 (Pro)** | Pro subscription | `aibuildai login` (Pro plan) + a Claude Code login or Anthropic API key |
 | **V1** | free | a Claude Code login or Anthropic API key (no account) |
 
 Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.io); see the account page for the available plans.
 
-### V2.5 (Max) — current
+### AIBuildAI Science — current
+
+1. **Subscribe.** Create an account at [accounts.aibuildai.io/sign-up](https://accounts.aibuildai.io/sign-up) and switch to the **Science** plan.
+
+2. **Install.**
+
+   ```bash
+   curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/science-latest/aibuildai-linux-x86_64.tar.gz | tar xz && ./aibuildai-linux-x86_64-*/install.sh
+   ```
+
+3. **Log in** (required before running):
+
+   ```bash
+   aibuildai login      # opens a browser to sign in
+   aibuildai whoami     # should show an active Science plan
+   ```
+
+4. **Sign in to Claude Code or set your API key.**
+
+   If Claude Code is already signed in on this machine, no Anthropic API key
+   is needed. AIBuildAI automatically uses the local Claude Code credentials.
+
+   If Claude Code is not signed in, run:
+
+   ```bash
+   claude auth login
+   ```
+
+   You can also use an Anthropic API key instead:
+
+   ```bash
+   export AIBUILDAI_API_KEY=your-anthropic-api-key
+   ```
+
+   To use OpenAI models, set a `gpt-*` model in the config. If Codex is signed in, that login is used; otherwise put your OpenAI key in `AIBUILDAI_API_KEY`.
+
+   To use DeepSeek, set a `deepseek-*` model in the config and put your DeepSeek API key in `AIBUILDAI_API_KEY`.
+
+5. **Run.** AIBuildAI Science is driven by a YAML config:
+
+   ```bash
+   aibuildai config > task.yaml    # writes a starter config with every field
+   # edit task.yaml: set run.task_name, run.data_root, run.playground_root
+   aibuildai run task.yaml
+   ```
+
+   Other commands: `aibuildai resume` (resume a stopped run), `aibuildai memorize` (summarize past runs into memory), `aibuildai replay <run-dir>` (replay a finished run), `aibuildai --help`.
+
+### V2.5 (Max)
 
 1. **Subscribe.** Create an account at [accounts.aibuildai.io/sign-up](https://accounts.aibuildai.io/sign-up) and switch to the **Max** plan.
 
