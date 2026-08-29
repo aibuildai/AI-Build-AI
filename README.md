@@ -74,7 +74,7 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
 2. **Install.**
 
    ```bash
-   curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/science-latest/aibuildai-linux-x86_64-science-latest.tar.gz | tar xz && ./aibuildai-linux-x86_64-*/install.sh
+   curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/science-latest/aibuildai-linux-x86_64-science-latest.tar.gz | (mkdir -p aibuildai-linux-x86_64-science-latest && tar xz -C aibuildai-linux-x86_64-science-latest --strip-components=1) && ./aibuildai-linux-x86_64-science-latest/install.sh
    ```
 
 3. **Log in** (required before running):
@@ -122,7 +122,7 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
 2. **Install.**
 
    ```bash
-   curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/v2.5-latest/aibuildai-linux-x86_64-v2.5-latest.tar.gz | tar xz && ./aibuildai-linux-x86_64-*/install.sh
+   curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/v2.5-latest/aibuildai-linux-x86_64-v2.5-latest.tar.gz | (mkdir -p aibuildai-linux-x86_64-v2.5-latest && tar xz -C aibuildai-linux-x86_64-v2.5-latest --strip-components=1) && ./aibuildai-linux-x86_64-v2.5-latest/install.sh
    ```
 
 3. **Log in** (required before running):
@@ -169,7 +169,7 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
 2. **Install.**
 
    ```bash
-   curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/v2.0-latest/aibuildai-linux-x86_64-v2.0-latest.tar.gz | tar xz && ./aibuildai-linux-x86_64-*/install.sh
+   curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/v2.0-latest/aibuildai-linux-x86_64-v2.0-latest.tar.gz | (mkdir -p aibuildai-linux-x86_64-v2.0-latest && tar xz -C aibuildai-linux-x86_64-v2.0-latest --strip-components=1) && ./aibuildai-linux-x86_64-v2.0-latest/install.sh
    ```
 
 3. **Log in.**
@@ -212,7 +212,7 @@ No account or subscription required.
 1. **Install.**
 
    ```bash
-   curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/v1.0-latest/aibuildai-linux-x86_64-v1.0-latest.tar.gz | tar xz && ./aibuildai-linux-x86_64-*/install.sh
+   curl -fsSL https://github.com/aibuildai/AI-Build-AI/releases/download/v1.0-latest/aibuildai-linux-x86_64-v1.0-latest.tar.gz | (mkdir -p aibuildai-linux-x86_64-v1.0-latest && tar xz -C aibuildai-linux-x86_64-v1.0-latest --strip-components=1) && ./aibuildai-linux-x86_64-v1.0-latest/install.sh
    ```
 
 2. **Sign in to Claude Code or set your API key.**
