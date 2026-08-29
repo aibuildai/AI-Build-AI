@@ -17,68 +17,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The history of assets/downloads.svg is the data source.
+          fetch-depth: 0
 
-      - name: Compute total downloads and write SVG
+      - name: Update the download history and redraw the badge and chart
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-
-          # 740 is the reconstructed lifetime total at migration time, while
-          # the assets still visible to GitHub summed to 79. The difference is
-          # download history lost when older assets were replaced.
-          HISTORICAL_DOWNLOADS=661
-
-          # The /releases listing endpoint has a poisoned edge cache that
-          # returns an empty array ~80% of the time for this repo. The
-          # per-tag endpoint /releases/tags/<tag> uses a separate cache
-          # key and is reliable. List tags, fetch each release individually,
-          # and sum the download counts of assets that still exist.
-          AUTH="Authorization: Bearer $GH_TOKEN"
-          API="https://api.github.com/repos/$REPO"
-
-          TAGS=$(curl -sfH "$AUTH" "$API/tags?per_page=100" | jq -r '.[].name')
-          echo "tags discovered: $(echo "$TAGS" | tr '\n' ' ')"
-
-          LIVE=0
-          for tag in $TAGS; do
-            RELEASE=$(curl -sfH "$AUTH" "$API/releases/tags/$tag") || {
-              echo "failed to read release for tag $tag" >&2
-              exit 1
-            }
-            DL=$(printf '%s' "$RELEASE" | jq -er '[.assets[]?.download_count] | add // 0')
-            echo "  $tag: $DL"
-            LIVE=$((LIVE + DL))
-          done
-
-          TOTAL=$((HISTORICAL_DOWNLOADS + LIVE))
-          echo "historical downloads: $HISTORICAL_DOWNLOADS"
-          echo "live downloads: $LIVE"
-          echo "lifetime downloads: $TOTAL"
-
-          PREV=0
-          if [ -f assets/downloads.svg ]; then
-            PREV=$(grep -oE '<title>downloads: [0-9]+' assets/downloads.svg | grep -oE '[0-9]+$' | head -n1)
-            PREV=${PREV:-0}
-          fi
-
-          if [ "$TOTAL" -lt "$PREV" ]; then
-            echo "download total regressed from $PREV to $TOTAL; published assets must never be replaced or deleted" >&2
-            exit 1
-          fi
-
-          mkdir -p assets
-          curl -sfL "https://img.shields.io/badge/downloads-${TOTAL}-brightgreen?style=flat-square"             -o assets/downloads.svg
+          python3 scripts/download_history.py update
+          python3 scripts/download_history.py render
 
       - name: Commit if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/downloads.svg
+          git add assets/downloads.svg assets/download-history.svg assets/download-history.json assets/download-observations.json
           if git diff --cached --quiet; then
             echo "no change"
           else
-            git commit -m "chore: refresh downloads badge"
+            git commit -m "chore: refresh download history"
             git push origin HEAD:main
           fi

@@ -267,6 +267,14 @@ git clone https://github.com/aibuildai/AI-Build-AI.git
 
 ---
 
+## Download history
+
+<p align="center">
+  <img src="assets/download-history.svg" alt="Download history">
+</p>
+
+The curve is the cumulative number of release asset downloads, one value per day. Every number is computed by [`scripts/download_history.py`](scripts/download_history.py) in a scheduled GitHub Actions workflow; nothing is entered by hand. The inputs are the git history of the badge, the raw per-release counts recorded by every run of that workflow in [`assets/download-observations.json`](assets/download-observations.json), and the GitHub Releases API. The result is [`assets/download-history.json`](assets/download-history.json). The x axis starts at the first commit of the repository (`axis_start`), and the curve starts on the first day a download total was committed (`first_observation`). Downloads before that day were lost when early release assets were replaced, because GitHub keeps download counts per asset. When assets are replaced, the downloads made before the next observation are not counted, so the total can only understate the real number. Clone the repository and run `python scripts/download_history.py bootstrap` to rebuild the history from the repository contents alone.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
