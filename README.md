@@ -113,6 +113,14 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    aibuildai run task.yaml
    ```
 
+   As a ready-to-run example, this repository ships [`tasks/protein-ec-prediction-science.yaml`](tasks/protein-ec-prediction-science.yaml), a config for predicting the enzyme class (EC number) of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)), together with its dataset. Clone the repo, point `run.playground_root` at a directory of your choice, and run it directly:
+
+   ```bash
+   git clone https://github.com/aibuildai/AI-Build-AI.git
+   cd AI-Build-AI
+   aibuildai run tasks/protein-ec-prediction-science.yaml
+   ```
+
    Other commands: `aibuildai resume` (resume a stopped run), `aibuildai memorize` (summarize past runs into memory), `aibuildai replay <run-dir>` (replay a finished run), `aibuildai --help`.
 
 ### V2.5 (Max)

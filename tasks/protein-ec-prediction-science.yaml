@@ -1,0 +1,47 @@
+run:
+  task_name: protein-ec-prediction
+  data_root: data/protein-ec-prediction   # relative to the repository root
+  playground_root: /path/to/playground    # where runs and outputs are written
+  budget:
+    wall_clock_minutes: 90
+
+llm:
+  default:
+    model: claude-opus-5
+
+search:
+  kind: nb_tree
+  parallel: 2
+
+resources:
+  work_unit:
+    cpu_max_cores: 16
+    memory_max_gb: 32
+    by_kind:
+      training: {cpu_max_cores: 24, memory_max_gb: 64}
+  gpu:
+    gpus_per_node: 1
+  cuda_visible_devices: [0, 1]
+
+work_units:
+  - {kind: llm_agent, role: setup,              budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: designer,           budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: designer_evaluator, budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: coder,              budget: {kind: depth, min_minutes: 20, max_minutes: 30, scale: 2}}
+  - {kind: llm_agent, role: coder_evaluator,    budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: worker,             budget: {kind: depth, min_minutes: 20, max_minutes: 30, scale: 2}}
+  - {kind: llm_agent, role: reviser,            budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: reviser_evaluator,  budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: judge,              budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: selector,           budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: router,             budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: aggregator,         budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: finalizer,          budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: writer,             budget: {kind: fixed, minutes: 15}}
+  - {kind: llm_agent, role: writer_evaluator,   budget: {kind: fixed, minutes: 15}}
+  - {kind: node_paper,    budget: {kind: fixed, minutes: 15}}
+  - {kind: score_program, budget: {kind: fixed, minutes: 5}}
+  - {kind: training,      budget: {kind: expected, min_minutes: 20, max_minutes: 30, slack_fraction: 0.3}}
+
+mcps:
+  kb: all
