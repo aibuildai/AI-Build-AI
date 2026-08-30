@@ -1,0 +1,100 @@
+# Protein EC number prediction, for the V2.5 (Max) edition.
+# Run with:  aibuildai run tasks/protein-ec-prediction-max.yaml
+
+run:
+  task_name: protein-ec-prediction
+  # This edition reads the inputs from {data_root}/{task_name}/public/, so the
+  # data files belong in /path/to/data/protein-ec-prediction/public/.
+  data_root: /path/to/data
+  playground_root: /path/to/playground
+  # The task statement. The data folder carries no description.md, so the file
+  # formats are spelled out here alongside the task itself.
+  instruction: |
+    # Protein EC Number Prediction
+
+    ## Task
+
+    Multi-class classification: given a protein amino acid sequence, predict its
+    EC (Enzyme Commission) class. The label is the top-level EC class, a single
+    digit from 1-7:
+
+      1 - Oxidoreductases
+      2 - Transferases
+      3 - Hydrolases
+      4 - Lyases
+      5 - Isomerases
+      6 - Ligases
+      7 - Translocases
+
+    ## Data (paths relative to run.data_root)
+
+    IMPORTANT -- the delimiters are NOT uniform despite the .csv extensions:
+
+      - train.csv              TAB-separated, CRLF line endings, 6,444 rows.
+                               Columns: `Entry`, `EC class`, `Sequence`.
+                               `EC class` is already the single-digit label 1-7.
+                               Read with: pd.read_csv(path, sep="\t")
+      - test.csv               TAB-separated, LF line endings, 1,313 rows.
+                               Columns: `ID`, `Sequences`  (note the plural).
+                               Read with: pd.read_csv(path, sep="\t")
+      - sample_submission.csv  COMMA-separated, CRLF, 1,313 rows.
+                               Columns: `ID`, `label`.
+
+    Verify the delimiter by inspecting the header before parsing; a wrong `sep`
+    silently yields a single-column frame.
+
+    Class distribution in train (imbalanced ~17:1):
+
+      class 1: 916    class 2: 2544   class 3: 1905   class 4: 457
+      class 5: 271    class 6: 203    class 7: 148
+
+    ## Output
+
+    Write `submission.csv` with exactly two comma-separated columns:
+      - ID    : must match the `ID` column of test.csv, all 1,313 rows
+      - label : predicted first-level EC class, an integer in {1,2,3,4,5,6,7}
+
+    Also save the final standalone inference script as `inference.py`.
+
+    ## Metric
+
+    Macro-averaged F1 across all 7 classes. Higher is better. Because macro-F1
+    weights every class equally, the rare classes (5, 6, 7) matter as much as
+    class 2 -- handle the imbalance explicitly (class weights, resampling, or a
+    balanced loss) rather than optimizing plain accuracy.
+
+    ## Environment
+
+    Python + PyTorch, CUDA GPU available. Protein language model embeddings
+    (e.g. ESM-2) are a strong approach, but establish a cheap baseline first
+    (k-mer / amino-acid composition features + a linear or gradient-boosted
+    model) so there is always a valid submission.
+
+llm:
+  model: claude-opus-5
+
+search:
+  parallel: 2
+
+budget:
+  pipeline_budget_minutes: 90
+  min_run_budget_minutes: 15
+  max_run_budget_minutes: 15
+  run_budget_scale: 2
+  # Defaults are 40 / 90, sized for the 1440-minute default pipeline; at 90
+  # minutes the stock aggregator reserve would claim the entire run.
+  phase_a_budget_minutes: 20
+  aggregator_reserve_cap_min_minutes: 20
+
+training:
+  min_minutes: 20
+  max_minutes: 30
+  slack_fraction: 0.3
+
+resources:
+  per_candidate:
+    cpu_cores: 16
+    rss_target_gb: 32
+  gpu:
+    min_free_mib: 8192
+    busy_util_threshold: 90
