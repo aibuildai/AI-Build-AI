@@ -232,7 +232,24 @@ No account or subscription required.
    export ANTHROPIC_API_KEY=your-api-key
    ```
 
-3. **Run** with command-line flags:
+3. **Run.** As an example, we use AIBuildAI to build a model that predicts the enzyme class (EC number) of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)). The task markdown and the dataset ship with this repository:
+
+   ```bash
+   git clone https://github.com/aibuildai/AI-Build-AI.git
+   cd AI-Build-AI
+
+   aibuildai --task-name protein-ec-prediction \
+     --data-dir data/protein-ec-prediction \
+     --playground-dir /path/to/playground \
+     --max-agent-calls 8 \
+     --run-budget-minutes 60 \
+     --num-candidates 3 \
+     --instruction "$(cat tasks/protein-ec-prediction.md)" \
+     --pipeline-budget-minutes 90 \
+     --no-form
+   ```
+
+   AIBuildAI takes two key inputs: `--data-dir`, the path to the training data for the task, and `--instruction`, a natural-language description of the AI task to solve. For your own task, point them at your own dataset and task markdown:
 
    ```bash
    aibuildai --task-name <name> --data-dir <path> \
@@ -241,25 +258,31 @@ No account or subscription required.
 
    Or run `aibuildai` with no flags to fill in the parameters in an interactive form.
 
-**Important:** run the command directly in your terminal. Do not wrap it in a `.sh`/`.bash` script — running it through a script may cause the TUI (Text User Interface) to crash.
+   **Important:** run the command directly in your terminal. Do not wrap it in a `.sh`/`.bash` script — running it through a script may cause the TUI (Text User Interface) to crash.
 
-### Results
+4. **Results.** After a run completes, the output directory usually looks like (structure may slightly vary by task):
 
-After a run completes, the output directory usually looks like (structure may slightly vary by task):
+   ```
+   ├── candidate_1/  candidate_2/  candidate_3/  # Auto-generated training scripts and model checkpoints
+   ├── checkpoint.pth       # Best model checkpoint
+   ├── inference.py         # Standalone inference script for the final model
+   ├── submission.csv       # Test predictions (if test inputs are provided)
+   └── progress.pdf         # Visual progress report
+   ```
 
-```
-├── candidate_1/  candidate_2/  candidate_3/  # Auto-generated training scripts and model checkpoints
-├── checkpoint.pth       # Best model checkpoint
-├── inference.py         # Standalone inference script for the final model
-├── submission.csv       # Test predictions (if test inputs are provided)
-└── progress.pdf         # Visual progress report
-```
+   The main outputs of an AIBuildAI run are the model checkpoints and the script `inference.py`, which runs predictions with the final model on any data. When the task data folder includes unlabeled test inputs, AIBuildAI also writes a predicted-label file `submission.csv`.
 
-The main outputs of an AIBuildAI run are the model checkpoints and the script `inference.py`, which runs predictions with the final model on any data. When the task data folder includes unlabeled test inputs, AIBuildAI also writes a predicted-label file `submission.csv`.
+   For the example `protein-ec-prediction` task, the data folder contains unlabeled test inputs, so AIBuildAI writes a `submission.csv`. To score it against the ground-truth labels shipped in this repository (macro F1):
+
+   ```bash
+   python scripts/eval_protein_ec.py \
+     --labels data/labels/protein-ec-prediction.csv \
+     --submission /path/to/playground/code/protein-ec-prediction/timestamp/submission.csv
+   ```
 
 ### Tasks
 
-We provide ready-to-run task markdowns and datasets in the `tasks/` folder of this repository. You can also write your own task description and point the run at your own dataset.
+Beyond the `protein-ec-prediction` example above, we provide more ready-to-run task markdowns and datasets in the `tasks/` folder of this repository. You can also write your own task description and point the run at your own dataset.
 
 ```bash
 git clone https://github.com/aibuildai/AI-Build-AI.git
