@@ -122,6 +122,8 @@ Two things differ between the four editions, so read the section for the edition
    ```bash
    git clone https://github.com/aibuildai/AI-Build-AI.git
    cd AI-Build-AI
+   # Edit tasks/protein-ec-prediction-science.yaml first: set run.playground_root
+   # to a writable directory of your choice. It ships as a placeholder.
    aibuildai run tasks/protein-ec-prediction-science.yaml
    ```
 
@@ -180,6 +182,10 @@ Two things differ between the four editions, so read the section for the edition
    git clone https://github.com/aibuildai/AI-Build-AI.git
    cd AI-Build-AI
 
+   # Replace /path/to/data below with a directory of your choice, then edit
+   # tasks/protein-ec-prediction-max.yaml to match: set run.data_root to that
+   # same directory and run.playground_root to a writable output directory.
+   # Both ship as placeholders.
    mkdir -p /path/to/data/protein-ec-prediction/public
    cp data/protein-ec-prediction/* /path/to/data/protein-ec-prediction/public/
 

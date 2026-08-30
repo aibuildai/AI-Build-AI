@@ -14,8 +14,6 @@ Multi-class classification: given a protein amino acid sequence, predict its EC 
 
 ## Data
 
-All files are tab-separated (TSV).
-
 - `train.csv` — 6,444 labeled proteins. Columns: `Entry`, `EC class`, `Sequence`. The `EC class` column already contains the single-digit class label (1–7).
 - `test.csv` — 1,313 unlabeled proteins. Columns: `ID`, `Sequences`
 - `sample_submission.csv` — submission format. Columns: `ID`, `label`

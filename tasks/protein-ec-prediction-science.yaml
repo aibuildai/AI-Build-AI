@@ -1,6 +1,8 @@
 run:
   task_name: protein-ec-prediction
-  data_root: data/protein-ec-prediction   # relative to the repository root
+  # Relative paths resolve against the directory you run aibuildai FROM, so this
+  # works when you run from the repository root. Use an absolute path otherwise.
+  data_root: data/protein-ec-prediction
   playground_root: /path/to/playground    # where runs and outputs are written
   budget:
     wall_clock_minutes: 90
@@ -28,8 +30,6 @@ llm:
       - **7** — Translocases
 
       ## Data
-
-      All files are tab-separated (TSV).
 
       - `train.csv` — 6,444 labeled proteins. Columns: `Entry`, `EC class`, `Sequence`. The `EC class` column already contains the single-digit class label (1–7).
       - `test.csv` — 1,313 unlabeled proteins. Columns: `ID`, `Sequences`
@@ -70,7 +70,6 @@ resources:
       training: {cpu_max_cores: 24, memory_max_gb: 64}
   gpu:
     gpus_per_node: 1
-  cuda_visible_devices: [0, 1]
 
 work_units:
   - {kind: llm_agent, role: setup,              budget: {kind: fixed, minutes: 15}}
