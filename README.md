@@ -117,7 +117,7 @@ Two things differ between the four editions, so read the section for the edition
 
    **Where your data goes.** On this edition `run.data_root` is the task folder itself: the directory holding what the task means plus every material the task needs. The run reads that folder whole and expects no layout inside it. If the path does not exist, the run stops before any model call with `no task folder found at ...`.
 
-   As a ready-to-run example, this repository ships [`tasks/protein-ec-prediction-science.yaml`](tasks/protein-ec-prediction-science.yaml), a config for predicting the enzyme class (EC number) of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)), together with its dataset. Clone the repo, point `run.playground_root` at a directory of your choice, and run it directly:
+   As a ready-to-run example, this repository ships [`tasks/protein-ec-prediction-science.yaml`](tasks/protein-ec-prediction-science.yaml), a config for the [protein EC number prediction task](#ec-example) described under V1, together with its dataset. Clone the repo, point `run.playground_root` at a directory of your choice, and run it directly:
 
    ```bash
    git clone https://github.com/aibuildai/AI-Build-AI.git
@@ -217,6 +217,22 @@ Two things differ between the four editions, so read the section for the edition
      --playground-dir <path> --instruction "$(cat task.md)" --no-form
    ```
 
+   The same [protein EC number prediction task](#ec-example) described under V1, run from a clone of this repository:
+
+   ```bash
+   aibuildai run \
+     --task-name protein-ec-prediction \
+     --data-dir data/protein-ec-prediction \
+     --playground-dir /path/to/playground \
+     --instruction @tasks/protein-ec-prediction.md \
+     --model claude-opus-5 \
+     --num-candidates 3 \
+     --max-agent-calls 8 \
+     --run-budget-minutes 60 \
+     --pipeline-budget-minutes 90 \
+     --no-form
+   ```
+
    Or run `aibuildai` with no flags to fill in the parameters in an interactive form.
 
 ### V1 (free)
@@ -246,7 +262,7 @@ No account or subscription required.
    export ANTHROPIC_API_KEY=your-api-key
    ```
 
-3. **Run.** V1 is driven by **command-line flags**, not by a YAML config. There is no `aibuildai config` command on this edition, and `--data-dir` names the folder holding your data directly. As an example, we use AIBuildAI to build a model that predicts the enzyme class (EC number) of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)). The task markdown and the dataset ship with this repository:
+3. <a id="ec-example"></a>**Run.** V1 is driven by **command-line flags**, not by a YAML config. There is no `aibuildai config` command on this edition, and `--data-dir` names the folder holding your data directly. As an example, we use AIBuildAI to build a model that predicts the enzyme class (EC number) of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)). The task markdown and the dataset ship with this repository:
 
    ```bash
    git clone https://github.com/aibuildai/AI-Build-AI.git
