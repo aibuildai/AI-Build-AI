@@ -67,6 +67,8 @@ There are four versions. **AIBuildAI Science** is the current, most capable vers
 
 Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.io); see the account page for the available plans.
 
+Two things differ between the four editions, so read the section for the edition you installed and no other. **How you start a run:** Science and V2.5 are driven by a YAML config file; V2 and V1 are driven by command-line flags, and have no `aibuildai config` command. **Which variable holds your API key:** Science and V2.5 read `AIBUILDAI_API_KEY`, which carries the key for whichever model provider you configure; V2 and V1 read `ANTHROPIC_API_KEY`, the variable the bundled Claude Code reads for itself. Each section below gives the exact command for its edition.
+
 ### AIBuildAI Science — current
 
 1. **Subscribe.** Create an account at [accounts.aibuildai.io/sign-up](https://accounts.aibuildai.io/sign-up) and switch to the **Science** plan.
@@ -84,7 +86,7 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    aibuildai whoami     # should show an active Science plan
    ```
 
-4. **Sign in to Claude Code or set your API key.**
+4. <a id="science-credentials"></a>**Sign in to Claude Code or set your API key.**
 
    If Claude Code is already signed in on this machine, no Anthropic API key
    is needed. AIBuildAI automatically uses the local Claude Code credentials.
@@ -95,7 +97,7 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    claude auth login
    ```
 
-   You can also use an Anthropic API key instead:
+   You can also use an API key instead. On this edition the key always goes in `AIBUILDAI_API_KEY`, whichever model provider you configure:
 
    ```bash
    export AIBUILDAI_API_KEY=your-anthropic-api-key
@@ -105,13 +107,15 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
 
    To use DeepSeek, set a `deepseek-*` model in the config and put your DeepSeek API key in `AIBUILDAI_API_KEY`.
 
-5. **Run.** AIBuildAI Science is driven by a YAML config:
+5. **Run.** AIBuildAI Science is driven by a **YAML config**, not by command-line flags. You write a config file and pass that file to `aibuildai run`:
 
    ```bash
    aibuildai config > task.yaml    # writes a starter config with every field
    # edit task.yaml: set run.task_name, run.data_root, run.playground_root
    aibuildai run task.yaml
    ```
+
+   **Where your data goes.** On this edition `run.data_root` is the task folder itself: the directory holding what the task means plus every material the task needs. The run reads that folder whole and expects no layout inside it. If the path does not exist, the run stops before any model call with `no task folder found at ...`.
 
    As a ready-to-run example, this repository ships [`tasks/protein-ec-prediction-science.yaml`](tasks/protein-ec-prediction-science.yaml), a config for predicting the enzyme class (EC number) of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)), together with its dataset. Clone the repo, point `run.playground_root` at a directory of your choice, and run it directly:
 
@@ -140,7 +144,7 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    aibuildai whoami     # should show an active Max plan
    ```
 
-4. **Sign in to Claude Code or set your API key.**
+4. <a id="v2-5-credentials"></a>**Sign in to Claude Code or set your API key.**
 
    If Claude Code is already signed in on this machine, no Anthropic API key
    is needed. AIBuildAI automatically uses the local Claude Code credentials.
@@ -151,7 +155,7 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    claude auth login
    ```
 
-   You can also use an Anthropic API key instead:
+   You can also use an API key instead. On this edition the key always goes in `AIBUILDAI_API_KEY`, whichever model provider you configure:
 
    ```bash
    export AIBUILDAI_API_KEY=your-anthropic-api-key
@@ -160,13 +164,15 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    To use DeepSeek, set a `deepseek-*` model in the config and put your
    DeepSeek API key in `AIBUILDAI_API_KEY`.
 
-5. **Run.** V2.5 is driven by a YAML config:
+5. **Run.** V2.5 is driven by a **YAML config**, not by command-line flags. You write a config file and pass that file to `aibuildai run`:
 
    ```bash
    aibuildai config > task.yaml    # writes a starter config with every field
    # edit task.yaml: set run.task_name, run.data_root, run.instruction, run.playground_root
    aibuildai run task.yaml
    ```
+
+   **Where your data goes.** On this edition `run.data_root` is not the folder holding your data. V2.5 reads the inputs from `{data_root}/{task_name}/public/`, so with `data_root: /path/to/data` and `task_name: my-task` the files belong in `/path/to/data/my-task/public/`. Pointing `data_root` straight at your data gives `no dataset directory found` once the run starts.
 
    Other commands: `aibuildai memorize` (summarize past runs into memory), `aibuildai replay <run-dir>` (replay a finished run), `aibuildai --help`.
 
@@ -187,7 +193,7 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    aibuildai whoami     # should show an active Pro plan
    ```
 
-4. **Sign in to Claude Code or set your API key.**
+4. <a id="v2-credentials"></a>**Sign in to Claude Code or set your API key.**
 
    If Claude Code is already signed in on this machine, no Anthropic API key
    is needed. AIBuildAI automatically uses the local Claude Code credentials.
@@ -198,13 +204,13 @@ Subscriptions are managed at [accounts.aibuildai.io](https://accounts.aibuildai.
    claude auth login
    ```
 
-   You can also use an Anthropic API key instead:
+   You can also use an Anthropic API key instead. This edition passes your shell environment through to the bundled Claude Code, which reads `ANTHROPIC_API_KEY` for itself, so that is the name to set here:
 
    ```bash
    export ANTHROPIC_API_KEY=your-api-key
    ```
 
-5. **Run.** V2 is driven by command-line flags:
+5. **Run.** V2 is driven by **command-line flags**, not by a YAML config. There is no `aibuildai config` command on this edition, and `--data-dir` names the folder holding your data directly:
 
    ```bash
    aibuildai run --task-name <name> --data-dir <path> \
@@ -223,7 +229,7 @@ No account or subscription required.
    curl -fsSL https://raw.githubusercontent.com/aibuildai/AI-Build-AI/main/install.sh | AIBUILDAI_LINE=v1.0 sh
    ```
 
-2. **Sign in to Claude Code or set your API key.**
+2. <a id="v1-credentials"></a>**Sign in to Claude Code or set your API key.**
 
    If Claude Code is already signed in on this machine, no Anthropic API key
    is needed. AIBuildAI automatically uses the local Claude Code credentials.
@@ -234,13 +240,13 @@ No account or subscription required.
    claude auth login
    ```
 
-   You can also use an Anthropic API key instead:
+   You can also use an Anthropic API key instead. This edition passes your shell environment through to the bundled Claude Code, which reads `ANTHROPIC_API_KEY` for itself, so that is the name to set here:
 
    ```bash
    export ANTHROPIC_API_KEY=your-api-key
    ```
 
-3. **Run.** As an example, we use AIBuildAI to build a model that predicts the enzyme class (EC number) of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)). The task markdown and the dataset ship with this repository:
+3. **Run.** V1 is driven by **command-line flags**, not by a YAML config. There is no `aibuildai config` command on this edition, and `--data-dir` names the folder holding your data directly. As an example, we use AIBuildAI to build a model that predicts the enzyme class (EC number) of a protein from its amino acid sequence ([Yu et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adf2465)). The task markdown and the dataset ship with this repository:
 
    ```bash
    git clone https://github.com/aibuildai/AI-Build-AI.git
