@@ -60,7 +60,7 @@ search:
 budget:
   pipeline_budget_minutes: 90
   min_run_budget_minutes: 15
-  max_run_budget_minutes: 15
+  max_run_budget_minutes: 30
   run_budget_scale: 2
   # Defaults are 40 / 90, sized for the 1440-minute default pipeline; at 90
   # minutes the stock aggregator reserve would claim the entire run.
