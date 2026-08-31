@@ -3,8 +3,8 @@
 
 run:
   task_name: protein-ec-prediction
-  # This edition reads the inputs from {data_root}/{task_name}/public/, so the
-  # data files belong in /path/to/data/protein-ec-prediction/public/.
+  # Point data_root directly at the folder holding the task's data files —
+  # for this example, the absolute path of data/protein-ec-prediction in this repo.
   data_root: /path/to/data
   playground_root: /path/to/playground
   # The task statement, verbatim from tasks/protein-ec-prediction.md.

@@ -174,21 +174,16 @@ Two things differ between the four editions, so read the section for the edition
    aibuildai run task.yaml
    ```
 
-   **Where your data goes.** On this edition `run.data_root` is not the folder holding your data. V2.5 reads the inputs from `{data_root}/{task_name}/public/`, so with `data_root: /path/to/data` and `task_name: my-task` the files belong in `/path/to/data/my-task/public/`. Pointing `data_root` straight at your data gives `no dataset directory found` once the run starts.
-
-   As a ready-to-run example, this repository ships [`tasks/protein-ec-prediction-max.yaml`](tasks/protein-ec-prediction-max.yaml), a config for the [protein EC number prediction task](#ec-example) described under V1. Copy the dataset into the layout above, set `run.data_root` and `run.playground_root` in the config, and run it:
+   As a ready-to-run example, this repository ships [`tasks/protein-ec-prediction-max.yaml`](tasks/protein-ec-prediction-max.yaml), a config for the [protein EC number prediction task](#ec-example) described under V1, together with its dataset. Clone the repo, point `run.data_root` at the dataset folder in the clone and `run.playground_root` at a writable output directory, and run it:
 
    ```bash
    git clone https://github.com/aibuildai/AI-Build-AI.git
    cd AI-Build-AI
 
-   # Replace /path/to/data below with a directory of your choice, then edit
-   # tasks/protein-ec-prediction-max.yaml to match: set run.data_root to that
-   # same directory and run.playground_root to a writable output directory.
+   # Edit tasks/protein-ec-prediction-max.yaml first: set run.data_root to the
+   # absolute path of data/protein-ec-prediction in this clone, and
+   # run.playground_root to a writable output directory of your choice.
    # Both ship as placeholders.
-   mkdir -p /path/to/data/protein-ec-prediction/public
-   cp data/protein-ec-prediction/* /path/to/data/protein-ec-prediction/public/
-
    aibuildai run tasks/protein-ec-prediction-max.yaml
    ```
 
