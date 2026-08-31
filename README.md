@@ -289,6 +289,7 @@ No account or subscription required.
    aibuildai --task-name protein-ec-prediction \
      --data-dir data/protein-ec-prediction \
      --playground-dir /path/to/playground \
+     --model claude-opus-5 \
      --max-agent-calls 8 \
      --run-budget-minutes 60 \
      --num-candidates 3 \
