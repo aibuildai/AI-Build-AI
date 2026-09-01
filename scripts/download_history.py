@@ -20,14 +20,24 @@ Commands:
   render        Draw assets/download-history.svg and the assets/downloads.svg
                 badge from the state file.
 
-Rebuilding replays every observation in time order. Between two snapshots
-keyed by asset id, a known asset contributes its growth and a new asset its
-whole count; GitHub never lowers an asset's count, so this is exact.
-Between two snapshots keyed by release tag, a tag whose count fell had some
-of its assets replaced; how many of the remaining downloads are new is
-unknowable, so nothing is added and the new count becomes the baseline.
-The total therefore never overstates downloads and can only miss those
-made between a replacement and the next observation.
+What counts as one download: one fetch of a release TARBALL. A release also
+carries a SHA256SUMS, but fetching it is part of one download rather than
+another one, and the shipped auto-updater fetches it on every up-to-date
+launch without ever touching the tarball, so counting it would count
+launches. The snapshot still records every asset, so the raw observations
+stay complete and this choice can be revisited without re-collecting.
+
+Rebuilding replays every observation in time order. An asset id is immutable
+and its count never falls, because replacing a release asset creates a new id
+starting at zero; so each id is measured against the highest count ever seen
+for it, and an id missing from one snapshot and back in a later one resumes
+from that baseline rather than being counted a second time. Between two
+snapshots keyed by release tag (the harvested logs recorded per-tag totals
+only), a tag whose count fell had some of its assets replaced; how many of
+the remaining downloads are new is unknowable, so nothing is added and the
+new count becomes the baseline. The total therefore never overstates
+downloads and can only miss those made between a replacement and the next
+observation.
 
 The same script produces the local preview and the workflow output.
 """
@@ -124,11 +134,17 @@ def api_json(url: str) -> object:
         return json.load(response)
 
 
-def api_pages(url: str, key: str) -> list:
+def api_pages(url: str, key: str | None = None) -> list:
+    """Every page of a listing endpoint. The url must already carry per_page=100.
+
+    key names the array inside the payload; omit it when the endpoint returns a
+    bare array, as /releases and /tags do."""
+
     items = []
     page = 1
     while True:
-        chunk = api_json(f"{url}&page={page}")[key]
+        payload = api_json(f"{url}&page={page}")
+        chunk = payload[key] if key else payload
         items.extend(chunk)
         if len(chunk) < 100:
             return items
@@ -136,25 +152,25 @@ def api_pages(url: str, key: str) -> list:
 
 
 def live_assets(repo: str) -> dict[str, dict]:
-    """Every asset GitHub still serves, keyed by its immutable asset id.
+    """Every asset of every PUBLISHED release, keyed by its immutable asset id.
 
-    The /releases listing endpoint returns an empty array for this repository
-    most of the time, so each release is read through its tag instead.
-    """
+    A draft is skipped by name here rather than by accident: a draft has no git
+    tag, so reading releases through the tag list used to hide drafts as a side
+    effect, and anyone who can see a draft can download its assets. Those are
+    not public downloads.
+
+    Read the whole /releases listing, every page. Walking the tag list instead
+    took one request per tag and, worse, silently dropped every release past
+    the first page of tags."""
 
     api = f"https://api.github.com/repos/{repo}"
     assets: dict[str, dict] = {}
-    for tag in api_json(f"{api}/tags?per_page=100"):
-        name = tag["name"]
-        try:
-            release = api_json(f"{api}/releases/tags/{name}")
-        except urllib.error.HTTPError as error:
-            if error.code == 404:
-                continue
-            raise
+    for release in api_pages(f"{api}/releases?per_page=100"):
+        if release["draft"]:
+            continue
         for asset in release.get("assets", []):
             assets[str(asset["id"])] = {
-                "tag": name,
+                "tag": release["tag_name"],
                 "name": asset["name"],
                 "download_count": int(asset["download_count"]),
             }
@@ -256,6 +272,29 @@ def counted_growth(previous: dict[str, int], current: dict[str, int]) -> int:
     return total
 
 
+def absorb(seen: dict[str, int], current: dict[str, int]) -> int:
+    """New downloads since the HIGHEST count ever recorded for each asset id.
+
+    An asset id is immutable and its count never falls: replacing a release
+    asset creates a new id starting at zero. So the highest count ever seen for
+    an id is a safe baseline, and an id that drops out of one snapshot and
+    returns in a later one resumes from that baseline instead of being counted
+    from zero a second time. Comparing against only the PREVIOUS snapshot would
+    add such an id's whole count again, and nothing would report it.
+
+    A fall means the assumption broke; say so instead of hiding it."""
+
+    total = 0
+    for asset_id, count in current.items():
+        before = seen.get(asset_id, 0)
+        if count > before:
+            total += count - before
+            seen[asset_id] = count
+        elif count < before:
+            print(f"warning: asset {asset_id} fell from {before} to {count}", file=sys.stderr)
+    return total
+
+
 def tarballs(observation: dict) -> dict[str, int]:
     """Only the release tarballs. Fetching a release's SHA256SUMS is part of one
     download, not a second one, and the shipped auto-updater fetches it on every
@@ -297,12 +336,16 @@ def rebuild_state(repo: str) -> dict:
         # the replay; the first observation itself is the baseline.
         cumulative = daily[max(daily)] if daily else sum(by_tag(observations[0]).values())
         previous = observations[0]
+        seen: dict[str, int] = dict(tarballs(previous)) if "assets" in previous else {}
         daily[utc_day(previous["at"])] = cumulative
         for current in observations[1:]:
             if "assets" in previous and "assets" in current:
-                cumulative += counted_growth(tarballs(previous), tarballs(current))
+                cumulative += absorb(seen, tarballs(current))
             else:
+                # One side is a harvested log, which recorded per-tag totals only.
                 cumulative += counted_growth(by_tag(previous), by_tag(current))
+                if "assets" in current:
+                    seen.update(tarballs(current))
             daily[utc_day(current["at"])] = cumulative
             previous = current
 
