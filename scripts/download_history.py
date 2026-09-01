@@ -256,11 +256,24 @@ def counted_growth(previous: dict[str, int], current: dict[str, int]) -> int:
     return total
 
 
+def tarballs(observation: dict) -> dict[str, int]:
+    """Only the release tarballs. Fetching a release's SHA256SUMS is part of one
+    download, not a second one, and the shipped auto-updater fetches it on every
+    up-to-date check without ever touching the tarball, so counting it counts
+    launches rather than downloads."""
+
+    return {
+        asset_id: count
+        for asset_id, count in observation["assets"].items()
+        if observation["releases"][asset_id][1].endswith(".tar.gz")
+    }
+
+
 def by_tag(observation: dict) -> dict[str, int]:
     if "tags" in observation:
         return observation["tags"]
     totals: dict[str, int] = {}
-    for asset_id, count in observation["assets"].items():
+    for asset_id, count in tarballs(observation).items():
         tag = observation["releases"][asset_id][0]
         totals[tag] = totals.get(tag, 0) + count
     return totals
@@ -287,7 +300,7 @@ def rebuild_state(repo: str) -> dict:
         daily[utc_day(previous["at"])] = cumulative
         for current in observations[1:]:
             if "assets" in previous and "assets" in current:
-                cumulative += counted_growth(previous["assets"], current["assets"])
+                cumulative += counted_growth(tarballs(previous), tarballs(current))
             else:
                 cumulative += counted_growth(by_tag(previous), by_tag(current))
             daily[utc_day(current["at"])] = cumulative
